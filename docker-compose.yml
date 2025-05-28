@@ -40,7 +40,7 @@ services:
       timeout: 120s
 
   sts:
-    image: sts:latest
+    image: localhost:5000/sts:latest
     container_name: consumer-sts
     environment:
       - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=1046
@@ -76,7 +76,7 @@ services:
         condition: service_healthy
 
   identity-hub:
-    image: identity-hub:latest
+    image: localhost:5000/identity-hub:latest
     container_name: consumer-identity-hub
     restart: always
     environment:
@@ -132,7 +132,7 @@ services:
         condition: service_healthy
 
   connector-controlplane:
-    image: controlplane:latest
+    image: localhost:5000/controlplane:latest
     container_name: consumer-connector-controlplane
     restart: always
     environment:
@@ -193,7 +193,7 @@ services:
         condition: service_healthy
 
   connector-dataplane:
-    image: dataplane:latest
+    image: localhost:5000/dataplane:latest
     container_name: consumer-connector-dataplane
     restart: always
     environment:
@@ -235,7 +235,6 @@ services:
         condition: service_healthy
 
 # Issuer
-
   dataspace-issuer-server:
     image: nginx:latest
     container_name: dataspace-issuer-server
