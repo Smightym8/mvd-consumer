@@ -48,9 +48,9 @@ steps:
 
 - script: |
     cd /opt/mvd
-    docker-compose down
-    docker-compose pull
-    docker-compose up -d
+    docker compose down
+    docker compose pull
+    docker compose up -d
   displayName: 'Run docker-compose to deploy MVD'
 
 - script: |
