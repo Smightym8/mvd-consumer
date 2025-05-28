@@ -35,7 +35,7 @@ DATA_CONSUMER=$(jq -n --arg url "$CONSUMER_CONTROLPLANE_SERVICE_URL" --arg ihurl
            }
        }')
 
-curl --location 'http://10.0.40.171:7081/api/identity/v1alpha/participants/' \
+curl --location 'http://localhost:7081/api/identity/v1alpha/participants/' \
 --header 'Content-Type: application/json' \
 --header "x-api-key: $API_KEY" \
 --data "$DATA_CONSUMER"
