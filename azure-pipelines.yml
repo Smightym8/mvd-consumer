@@ -40,3 +40,17 @@ steps:
     docker tag dataplane:latest $(dockerRegistry)/dataplane:latest
     docker push $(dockerRegistry)/dataplane:latest
   displayName: 'Push dataplane docker image to docker registry'
+
+- script: |
+    docker image rm sts:latest
+    docker image rm localhost:5000/sts 
+
+    docker image rm identity-hub:latest
+    docker image rm localhost:5000/identity-hub:latest 
+    
+    docker image rm controlplane:latest
+    docker image rm localhost:5000/controlplane:latest
+
+    docker image rm dataplane:latest
+    docker image rm localhost:5000/dataplane:latest
+  displayName: 'Cleanup local docker images'
