@@ -4,6 +4,9 @@ trigger:
 pool:
   name: Default
 
+variables: 
+  dockerRegistry: 'localhost:5000'
+
 steps:
 - task: Gradle@4
   displayName: 'Gradle Build'
@@ -17,3 +20,8 @@ steps:
     gradleWrapperFile: 'gradlew'
     tasks: 'dockerize'
     options: '-Ppersistence=true'
+
+- script: |
+    docker tag sts:latest $(dockerRegistry)/sts:latest
+    docker push $(dockerRegistry)/sts:latest
+  displayName: 'Push sts docker image to docker registry'
