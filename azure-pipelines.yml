@@ -56,3 +56,4 @@ steps:
 - script: |
     docker system prune -a -f
   displayName: 'Cleanup local docker'
+  condition: always()
