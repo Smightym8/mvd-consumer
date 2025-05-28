@@ -42,5 +42,17 @@ steps:
   displayName: 'Push dataplane docker image to docker registry'
 
 - script: |
+    cp -r deployment /opt/mvd
+    cp docker-compose.yml /opt/mvd
+  displayName: 'Copy deployment files to /opt/mvd'
+
+- script: |
+    cd /opt/mvd
+    docker-compose down
+    docker-compose pull
+    docker-compose up -d
+  displayName: 'Run docker-compose to deploy MVD'
+
+- script: |
     docker system prune -a -f
   displayName: 'Cleanup local docker'
