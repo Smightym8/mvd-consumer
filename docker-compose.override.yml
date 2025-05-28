@@ -1,0 +1,93 @@
+services:
+  postgres:
+    image: postgres:16.3-alpine3.20
+    container_name: consumer-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./postgres-initdb-config.sql:/docker-entrypoint-initdb.d/postgres-initdb-config.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+      timeout: 120s
+    networks:
+      - mvd
+
+  vault:
+    image: hashicorp/vault:latest
+    container_name: consumer-vault
+    restart: always
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: "root"
+      VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
+      VAULT_ADDR: "http://localhost:8200"
+    ports:
+      - "8200:8200"
+    cap_add:
+      - IPC_LOCK
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - vault server -dev
+    healthcheck:
+      test: ["CMD", "vault", "status"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+      timeout: 120s
+    networks:
+      - mvd
+
+  sts:
+    image: sts:latest
+    depends_on:
+      vault:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  identity-hub:
+    image: identity-hub:latest
+    depends_on:
+      vault:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  connector-controlplane:
+    image: controlplane:latest
+    depends_on:
+      vault:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  connector-dataplane:
+    image: dataplane:latest
+    depends_on:
+      vault:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  dataspace-issuer-server:
+    image: nginx:latest
+    container_name: dataspace-issuer-server
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./issuer/did.json:/var/www/.well-known/did.json
+      - ./issuer/nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - mvd
+
+networks:
+  mvd:
+    name: mvd
+    external: false

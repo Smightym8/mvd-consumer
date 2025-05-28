@@ -54,12 +54,6 @@ steps:
   displayName: 'Run docker-compose to deploy MVD'
 
 - script: |
-    cd /opt/mvd/deployment/scripts
-    chmod u+x seed.sh
-    ./seed.sh
-  displayName: 'Run seed script'
-
-- script: |
     docker system prune -a -f
   displayName: 'Cleanup local docker'
   condition: always()
