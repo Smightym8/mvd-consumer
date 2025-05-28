@@ -55,6 +55,7 @@ steps:
 
 - script: |
     cd /opt/mvd/deployment/scripts
+    chmod u+x seed.sh
     ./seed.sh
   displayName: 'Run seed script'
 
