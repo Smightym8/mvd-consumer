@@ -25,3 +25,18 @@ steps:
     docker tag sts:latest $(dockerRegistry)/sts:latest
     docker push $(dockerRegistry)/sts:latest
   displayName: 'Push sts docker image to docker registry'
+
+- script: |
+    docker tag identity-hub:latest $(dockerRegistry)/identity-hub:latest
+    docker push $(dockerRegistry)/identity-hub:latest
+  displayName: 'Push identity hub docker image to docker registry'
+
+- script: |
+    docker tag controlplane:latest $(dockerRegistry)/controlplane:latest
+    docker push $(dockerRegistry)/controlplane:latest
+  displayName: 'Push controlplane docker image to docker registry'
+
+- script: |
+    docker tag dataplane:latest $(dockerRegistry)/dataplane:latest
+    docker push $(dockerRegistry)/dataplane:latest
+  displayName: 'Push dataplane docker image to docker registry'
