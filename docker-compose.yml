@@ -1,0 +1,247 @@
+services:
+  postgres:
+    image: postgres:16.3-alpine3.20
+    container_name: consumer-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./deployment/assets/consumer/postgres-initdb-config.sql:/docker-entrypoint-initdb.d/postgres-initdb-config.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+      timeout: 120s
+
+  vault:
+    image: hashicorp/vault:latest
+    container_name: consumer-vault
+    restart: always
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: "root"
+      VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
+      VAULT_ADDR: "http://localhost:8200"
+    ports:
+      - "8200:8200"
+    cap_add:
+      - IPC_LOCK
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - vault server -dev
+    healthcheck:
+      test: ["CMD", "vault", "status"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+      timeout: 120s
+
+  sts:
+    image: sts:latest
+    container_name: consumer-sts
+    environment:
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=1046
+      - WEB_HTTP_ACCOUNTS_PORT=8081
+      - WEB_HTTP_ACCOUNTS_PATH=/api
+      - WEB_HTTP_PORT=8080
+      - WEB_HTTP_PATH=/internal
+      - WEB_HTTP_STS_PORT=8082
+      - WEB_HTTP_STS_PATH=/api/sts
+      - EDC_API_ACCOUNTS_KEY=password
+      - EDC_DATASOURCE_DEFAULT_URL=jdbc:postgresql://consumer-postgres:5432/consumer
+      - EDC_DATASOURCE_DEFAULT_USER=consumer
+      - EDC_DATASOURCE_DEFAULT_PASSWORD=consumer
+      - EDC_SQL_SCHEMA_AUTOCREATE=true
+      - EDC_VAULT_HASHICORP_URL=http://consumer-vault:8200
+      - EDC_VAULT_HASHICORP_TOKEN=root
+    ports:
+      - "6080:8080" # Web port
+      - "6081:8081" # Accounts port
+      - "6082:8082" # STS port
+      - "1046:1046" # Debug Port
+    healthcheck:
+      test:
+        ["CMD", "curl", "-f", "http://localhost:8080/internal/check/readiness"]
+      interval: 5s
+      timeout: 120s
+      retries: 10
+      start_period: 5s
+    depends_on:
+      vault:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  identity-hub:
+    image: identity-hub:latest
+    container_name: consumer-identity-hub
+    restart: always
+    environment:
+      - EDC_API_AUTH_KEY=password
+      - EDC_IH_IAM_ID=did:web:10.0.40.171%3A7083:consumer
+      - EDC_IAM_DID_WEB_USE_HTTPS=false
+      - EDC_IH_IAM_PUBLICKEY_ALIAS=consumer-identity-hub-publickey
+      - EDC_IH_API_SUPERUSER_KEY=c3VwZXItdXNlcg==.c3VwZXItc2VjcmV0LWtleQo=
+      - WEB_HTTP_PORT=7080
+      - WEB_HTTP_PATH=/api
+      - WEB_HTTP_IDENTITY_PORT=7081
+      - WEB_HTTP_IDENTITY_PATH=/api/identity
+      - WEB_HTTP_PRESENTATION_PORT=7082
+      - WEB_HTTP_PRESENTATION_PATH=/api/presentation
+      - WEB_HTTP_DID_PORT=7083
+      - WEB_HTTP_DID_PATH=/
+      - WEB_HTTP_STS_PORT=7084
+      - WEB_HTTP_STS_PATH=/api/sts
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=1044
+      - EDC_IAM_STS_PRIVATEKEY_ALIAS=key-1
+      - EDC_IAM_STS_PUBLICKEY_ID=key-1
+      - EDC_MVD_CREDENTIALS_PATH=/etc/credentials/
+      - EDC_VAULT_HASHICORP_URL=http://consumer-vault:8200
+      - EDC_VAULT_HASHICORP_TOKEN=root
+      - EDC_DATASOURCE_DEFAULT_URL=jdbc:postgresql://consumer-postgres:5432/consumer
+      - EDC_DATASOURCE_DEFAULT_USER=consumer
+      - EDC_DATASOURCE_DEFAULT_PASSWORD=consumer
+      - EDC_SQL_SCHEMA_AUTOCREATE=true
+      - EDC_STS_ACCOUNT_API_URL=http://consumer-sts:8081/api
+      - EDC_STS_ACCOUNTS_API_AUTH_HEADER_VALUE=password
+      - EDC_IAM_ACCESSTOKEN_JTI_VALIDATION=true
+    ports:
+      - "7080:7080" # Web port
+      - "7081:7081" # Identity port
+      - "7082:7082" # Presentation Port
+      - "7083:7083" # DID port
+      - "7084:7084" # STS Port
+      - "1044:1044" # Debug Port
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7080/api/check/readiness"]
+      interval: 5s
+      timeout: 120s
+      retries: 10
+      start_period: 5s
+    volumes:
+      - ./deployment/assets/consumer/credentials/:/etc/credentials/
+    depends_on:
+      vault:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      sts:
+        condition: service_healthy
+
+  connector-controlplane:
+    image: controlplane:latest
+    container_name: consumer-connector-controlplane
+    restart: always
+    environment:
+      - EDC_PARTICIPANT_ID=did:web:10.0.40.171%3A7083:consumer
+      - EDC_API_AUTH_KEY=password
+      - EDC_IAM_ISSUER_ID=did:web:10.0.40.171%3A7083:consumer
+      - EDC_IAM_DID_WEB_USE_HTTPS=false
+      - WEB_HTTP_PORT=8080
+      - WEB_HTTP_PATH=/api
+      - WEB_HTTP_MANAGEMENT_PORT=8081
+      - WEB_HTTP_MANAGEMENT_PATH=/api/management
+      - WEB_HTTP_CONTROL_PORT=8083
+      - WEB_HTTP_CONTROL_PATH=/api/control
+      - WEB_HTTP_PROTOCOL_PORT=8082
+      - WEB_HTTP_PROTOCOL_PATH=/api/dsp
+      - WEB_HTTP_CATALOG_PORT=8084
+      - WEB_HTTP_CATALOG_PATH=/api/catalog
+      - WEB_HTTP_CATALOG_AUTH_TYPE=tokenbased
+      - WEB_HTTP_CATALOG_AUTH_KEY=password
+      - EDC_DSP_CALLBACK_ADDRESS=http://10.0.40.171:8082/api/dsp
+      - EDC_IAM_STS_PRIVATEKEY_ALIAS=did:web:10.0.40.171%3A7083:consumer#key-1
+      - EDC_IAM_STS_PUBLICKEY_ID=did:web:10.0.40.171%3A7083:consumer#key-1
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=1044
+      - EDC_IH_AUDIENCE_REGISTRY_PATH=/etc/registry/registry.json
+      - EDC_VAULT_HASHICORP_URL=http://consumer-vault:8200
+      - EDC_VAULT_HASHICORP_TOKEN=root
+      - EDC_MVD_PARTICIPANTS_LIST_FILE=/etc/participants/participants.json
+      - EDC_CATALOG_CACHE_EXECUTION_DELAY_SECONDS=10
+      - EDC_CATALOG_CACHE_EXECUTION_PERIOD_SECONDS=10
+      - EDC_DATASOURCE_DEFAULT_URL=jdbc:postgresql://consumer-postgres:5432/consumer
+      - EDC_DATASOURCE_DEFAULT_USER=consumer
+      - EDC_DATASOURCE_DEFAULT_PASSWORD=consumer
+      - EDC_SQL_SCHEMA_AUTOCREATE=true
+      - EDC_IAM_STS_OAUTH_TOKEN_URL=http://consumer-sts:8082/api/sts/token
+      - EDC_IAM_STS_OAUTH_CLIENT_ID=did:web:10.0.40.171%3A7083:consumer
+      - EDC_IAM_STS_OAUTH_CLIENT_SECRET_ALIAS=did:web:10.0.40.171%3A7083:consumer-sts-client-secret
+    ports:
+      - "8080:8080" # Web Port
+      - "8081:8081" # Management Port
+      - "8082:8082" # Protocol Port
+      - "8083:8083" # Control Port
+      - "8084:8084" # Catalog Port
+      - "2044:1044" # Debug Port
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/check/readiness"]
+      interval: 5s
+      timeout: 120s
+      retries: 10
+      start_period: 5s
+    volumes:
+      - ./deployment/assets/consumer/participants.json:/etc/participants/participants.json
+    depends_on:
+      vault:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      sts:
+        condition: service_healthy
+
+  connector-dataplane:
+    image: dataplane:latest
+    container_name: consumer-connector-dataplane
+    restart: always
+    environment:
+      - EDC_HOSTNAME=consumer-connector-dataplane
+      - EDC_RUNTIME_ID=consumer-connector-dataplane
+      - EDC_PARTICIPANT_ID=did:web:10.0.40.171%3A7083:consumer
+      - EDC_TRANSFER_PROXY_TOKEN_VERIFIER_PUBLICKEY_ALIAS=did:web:10.0.40.171%3A7083:consumer#key-1
+      - EDC_TRANSFER_PROXY_TOKEN_SIGNER_PRIVATEKEY_ALIAS=did:web:10.0.40.171%3A7083:consumer#key-1
+      - EDC_DPF_SELECTOR_URL=http://consumer-connector-controlplane:8083/api/control/v1/dataplanes
+      - WEB_HTTP_PORT=8080
+      - WEB_HTTP_PATH=/api
+      - WEB_HTTP_CONTROL_PORT=8083
+      - WEB_HTTP_CONTROL_PATH=/api/control
+      - WEB_HTTP_PUBLIC_PORT=11002
+      - WEB_HTTP_PUBLIC_PATH=/api/public
+      - EDC_VAULT_HASHICORP_URL=http://consumer-vault:8200
+      - EDC_VAULT_HASHICORP_TOKEN=root
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=1044
+      - EDC_DATASOURCE_DEFAULT_URL=jdbc:postgresql://consumer-postgres:5432/consumer
+      - EDC_DATASOURCE_DEFAULT_USER=consumer
+      - EDC_DATASOURCE_DEFAULT_PASSWORD=consumer
+      - EDC_SQL_SCHEMA_AUTOCREATE=true
+      - EDC_IAM_STS_OAUTH_TOKEN_URL=http://consumer-sts:8082/api/sts/token
+      - EDC_IAM_STS_OAUTH_CLIENT_ID=did:web:10.0.40.171%3A7083:consumer
+      - EDC_IAM_STS_OAUTH_CLIENT_SECRET_ALIAS=did:web:10.0.40.171%3A7083:consumer-sts-client-secret
+    ports:
+      - "9080:8080" # Web Port
+      - "9083:8083" # Control Port
+      - "11002:11002" # Public Port
+      - "1045:1044" # Debug Port
+    depends_on:
+      vault:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      connector-controlplane:
+        condition: service_healthy
+      sts:
+        condition: service_healthy
+
+# Issuer
+
+  dataspace-issuer-server:
+    image: nginx:latest
+    container_name: dataspace-issuer-server
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./deployment/assets/issuer/did.json:/var/www/.well-known/did.json
+      - ./deployment/assets/issuer/nginx.conf:/etc/nginx/nginx.conf

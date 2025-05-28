@@ -1,0 +1,4 @@
+{
+    "consumer-corp": "did:web:10.0.40.171%3A7083:consumer",
+    "provider-corp": "did:web:10.0.40.172%3A7083:provider"
+}

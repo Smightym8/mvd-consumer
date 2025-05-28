@@ -1,0 +1,24 @@
+{
+  "service": [],
+  "verificationMethod": [
+    {
+      "id": "did:web:10.0.40.171#key-1",
+      "type": "JsonWebKey2020",
+      "controller": "did:web:10.0.40.171",
+      "publicKeyMultibase": null,
+      "publicKeyJwk": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "Hsq2QXPbbsU7j6JwXstbpxGSgliI04g_fU3z2nwkuVc"
+      }
+    }
+  ],
+  "authentication": ["key-1"],
+  "id": "did:web:10.0.40.171",
+  "@context": [
+    "https://www.w3.org/ns/did/v1",
+    {
+      "@base": "did:web:10.0.40.171"
+    }
+  ]
+}
