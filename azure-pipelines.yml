@@ -3,6 +3,8 @@ trigger:
 
 pool:
   name: Default
+  demands:
+  - Agent.Name -equals masterhora1
 
 variables: 
   dockerRegistry: 'localhost:5000'
