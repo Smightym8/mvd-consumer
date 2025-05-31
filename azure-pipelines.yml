@@ -11,6 +11,12 @@ variables:
 
 steps:
 - task: Gradle@4
+  displayName: 'Gradle Clean'
+  inputs:
+    gradleWrapperFile: 'gradlew'
+    tasks: 'clean'
+
+- task: Gradle@4
   displayName: 'Gradle Build'
   inputs:
     gradleWrapperFile: 'gradlew'
