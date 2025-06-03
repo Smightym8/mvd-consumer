@@ -79,7 +79,7 @@ services:
       retries: 10
       start_period: 5s
     volumes:
-      - ./deployment/assets/consumer/credentials/:/etc/credentials/
+      - ./deployment/assets/credentials/:/etc/credentials/
     depends_on:
       sts:
         condition: service_healthy
@@ -138,7 +138,7 @@ services:
       retries: 10
       start_period: 5s
     volumes:
-      - ./deployment/assets/consumer/participants.json:/etc/participants/participants.json
+      - ./deployment/assets/participants.json:/etc/participants/participants.json
     depends_on:
       sts:
         condition: service_healthy
