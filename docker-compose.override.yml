@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     volumes:
-      - ./postgres-initdb-config.sql:/docker-entrypoint-initdb.d/postgres-initdb-config.sql
+      - ./external/postgresql/postgres-initdb-config.sql:/docker-entrypoint-initdb.d/postgres-initdb-config.sql
     ports:
       - "5432:5432"
     healthcheck:

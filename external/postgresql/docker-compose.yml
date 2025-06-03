@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: postgres:16.3-alpine3.20
+    container_name: consumer-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./postgres-initdb-config.sql:/docker-entrypoint-initdb.d/postgres-initdb-config.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+      timeout: 120s
+    networks:
+      - mvd
+
+networks:
+  mvd:
+    name: mvd
+    external: true
