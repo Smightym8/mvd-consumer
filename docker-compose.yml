@@ -177,6 +177,12 @@ services:
       - "9083:8083" # Control Port
       - "11002:11002" # Public Port
       - "1045:1044" # Debug Port
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/check/readiness"]
+      interval: 5s
+      timeout: 120s
+      retries: 10
+      start_period: 5s
     depends_on:
       connector-controlplane:
         condition: service_healthy
