@@ -7,14 +7,14 @@ API_KEY="c3VwZXItdXNlcg==.c3VwZXItc2VjcmV0LWtleQo="
 echo
 echo
 echo "Create consumer participant"
-CONSUMER_CONTROLPLANE_SERVICE_URL="http://10.0.40.171:8082"
-CONSUMER_IDENTITYHUB_URL="http://10.0.40.171:7082"
+CONSUMER_CONTROLPLANE_SERVICE_URL="http://[INSERT CONSUMER IP]:8082"
+CONSUMER_IDENTITYHUB_URL="http://[INSERT CONSUMER IP]:7082"
 DATA_CONSUMER=$(jq -n --arg url "$CONSUMER_CONTROLPLANE_SERVICE_URL" --arg ihurl "$CONSUMER_IDENTITYHUB_URL" '{
            "roles":[],
            "serviceEndpoints":[
              {
                 "type": "CredentialService",
-                "serviceEndpoint": "\($ihurl)/api/presentation/v1/participants/ZGlkOndlYjoxMC4wLjQwLjE3MSUzQTcwODM6Y29uc3VtZXI=",
+                "serviceEndpoint": "\($ihurl)/api/presentation/v1/participants/[INSERT CONSUMER DID AS BASE64 STRING]",
                 "id": "consumer-credentialservice-1"
              },
              {
@@ -24,11 +24,11 @@ DATA_CONSUMER=$(jq -n --arg url "$CONSUMER_CONTROLPLANE_SERVICE_URL" --arg ihurl
              }
            ],
            "active": true,
-           "participantId": "did:web:10.0.40.171%3A7083:consumer",
-           "did": "did:web:10.0.40.171%3A7083:consumer",
+           "participantId": "did:web:[INSERT CONSUMER IP]%3A7083:consumer",
+           "did": "did:web:[INSERT CONSUMER IP]%3A7083:consumer",
            "key":{
-               "keyId": "did:web:10.0.40.171%3A7083:consumer#key-1",
-               "privateKeyAlias": "did:web:10.0.40.171%3A7083:consumer#key-1",
+               "keyId": "did:web:[INSERT CONSUMER IP]%3A7083:consumer#key-1",
+               "privateKeyAlias": "did:web:[INSERT CONSUMER IP]%3A7083:consumer#key-1",
                "keyGeneratorParams":{
                   "algorithm": "EC"
                }
