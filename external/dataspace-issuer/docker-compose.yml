@@ -1,0 +1,17 @@
+services: 
+  dataspace-issuer-server:
+    image: nginx:latest
+    container_name: dataspace-issuer-server
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./assets/did.json:/var/www/.well-known/did.json
+      - ./assets/nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - mvd
+      
+networks:
+  mvd:
+    name: mvd
+    external: true
