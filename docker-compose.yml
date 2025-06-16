@@ -1,6 +1,6 @@
 services:
   sts:
-    image: localhost:5000/sts:latest
+    image: [INSERT DOCKER REGISTRY]/sts:latest
     container_name: consumer-sts
     environment:
       - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=1046
@@ -33,12 +33,12 @@ services:
       - mvd
 
   identity-hub:
-    image: localhost:5000/identity-hub:latest
+    image: [INSERT DOCKER REGISTRY]/identity-hub:latest
     container_name: consumer-identity-hub
     restart: always
     environment:
       - EDC_API_AUTH_KEY=password
-      - EDC_IH_IAM_ID=did:web:10.0.40.171%3A7083:consumer
+      - EDC_IH_IAM_ID=did:web:[INSERT CONSUMER IP]%3A7083:consumer
       - EDC_IAM_DID_WEB_USE_HTTPS=false
       - EDC_IH_IAM_PUBLICKEY_ALIAS=consumer-identity-hub-publickey
       - EDC_IH_API_SUPERUSER_KEY=c3VwZXItdXNlcg==.c3VwZXItc2VjcmV0LWtleQo=
@@ -87,13 +87,13 @@ services:
       - mvd
 
   connector-controlplane:
-    image: localhost:5000/controlplane:latest
+    image: [INSERT DOCKER REGISTRY]/controlplane:latest
     container_name: consumer-connector-controlplane
     restart: always
     environment:
-      - EDC_PARTICIPANT_ID=did:web:10.0.40.171%3A7083:consumer
+      - EDC_PARTICIPANT_ID=did:web:[INSERT CONSUMER IP]%3A7083:consumer
       - EDC_API_AUTH_KEY=password
-      - EDC_IAM_ISSUER_ID=did:web:10.0.40.171%3A7083:consumer
+      - EDC_IAM_ISSUER_ID=did:web:[INSERT CONSUMER IP]%3A7083:consumer
       - EDC_IAM_DID_WEB_USE_HTTPS=false
       - WEB_HTTP_PORT=8080
       - WEB_HTTP_PATH=/api
@@ -107,9 +107,9 @@ services:
       - WEB_HTTP_CATALOG_PATH=/api/catalog
       - WEB_HTTP_CATALOG_AUTH_TYPE=tokenbased
       - WEB_HTTP_CATALOG_AUTH_KEY=password
-      - EDC_DSP_CALLBACK_ADDRESS=http://10.0.40.171:8082/api/dsp
-      - EDC_IAM_STS_PRIVATEKEY_ALIAS=did:web:10.0.40.171%3A7083:consumer#key-1
-      - EDC_IAM_STS_PUBLICKEY_ID=did:web:10.0.40.171%3A7083:consumer#key-1
+      - EDC_DSP_CALLBACK_ADDRESS=http://[INSERT CONSUMER IP]:8082/api/dsp
+      - EDC_IAM_STS_PRIVATEKEY_ALIAS=did:web:[INSERT CONSUMER IP]%3A7083:consumer#key-1
+      - EDC_IAM_STS_PUBLICKEY_ID=did:web:[INSERT CONSUMER IP]%3A7083:consumer#key-1
       - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=1044
       - EDC_IH_AUDIENCE_REGISTRY_PATH=/etc/registry/registry.json
       - EDC_VAULT_HASHICORP_URL=http://consumer-vault:8200
@@ -122,8 +122,8 @@ services:
       - EDC_DATASOURCE_DEFAULT_PASSWORD=consumer
       - EDC_SQL_SCHEMA_AUTOCREATE=true
       - EDC_IAM_STS_OAUTH_TOKEN_URL=http://consumer-sts:8082/api/sts/token
-      - EDC_IAM_STS_OAUTH_CLIENT_ID=did:web:10.0.40.171%3A7083:consumer
-      - EDC_IAM_STS_OAUTH_CLIENT_SECRET_ALIAS=did:web:10.0.40.171%3A7083:consumer-sts-client-secret
+      - EDC_IAM_STS_OAUTH_CLIENT_ID=did:web:[INSERT CONSUMER IP]%3A7083:consumer
+      - EDC_IAM_STS_OAUTH_CLIENT_SECRET_ALIAS=did:web:[INSERT CONSUMER IP]%3A7083:consumer-sts-client-secret
     ports:
       - "8080:8080" # Web Port
       - "8081:8081" # Management Port
@@ -146,15 +146,15 @@ services:
       - mvd
 
   connector-dataplane:
-    image: localhost:5000/dataplane:latest
+    image: [INSERT DOCKER REGISTRY]/dataplane:latest
     container_name: consumer-connector-dataplane
     restart: always
     environment:
       - EDC_HOSTNAME=consumer-connector-dataplane
       - EDC_RUNTIME_ID=consumer-connector-dataplane
-      - EDC_PARTICIPANT_ID=did:web:10.0.40.171%3A7083:consumer
-      - EDC_TRANSFER_PROXY_TOKEN_VERIFIER_PUBLICKEY_ALIAS=did:web:10.0.40.171%3A7083:consumer#key-1
-      - EDC_TRANSFER_PROXY_TOKEN_SIGNER_PRIVATEKEY_ALIAS=did:web:10.0.40.171%3A7083:consumer#key-1
+      - EDC_PARTICIPANT_ID=did:web:[INSERT CONSUMER IP]%3A7083:consumer
+      - EDC_TRANSFER_PROXY_TOKEN_VERIFIER_PUBLICKEY_ALIAS=did:web:[INSERT CONSUMER IP]%3A7083:consumer#key-1
+      - EDC_TRANSFER_PROXY_TOKEN_SIGNER_PRIVATEKEY_ALIAS=did:web:[INSERT CONSUMER IP]%3A7083:consumer#key-1
       - EDC_DPF_SELECTOR_URL=http://consumer-connector-controlplane:8083/api/control/v1/dataplanes
       - WEB_HTTP_PORT=8080
       - WEB_HTTP_PATH=/api
@@ -170,8 +170,8 @@ services:
       - EDC_DATASOURCE_DEFAULT_PASSWORD=consumer
       - EDC_SQL_SCHEMA_AUTOCREATE=true
       - EDC_IAM_STS_OAUTH_TOKEN_URL=http://consumer-sts:8082/api/sts/token
-      - EDC_IAM_STS_OAUTH_CLIENT_ID=did:web:10.0.40.171%3A7083:consumer
-      - EDC_IAM_STS_OAUTH_CLIENT_SECRET_ALIAS=did:web:10.0.40.171%3A7083:consumer-sts-client-secret
+      - EDC_IAM_STS_OAUTH_CLIENT_ID=did:web:[INSERT CONSUMER IP]%3A7083:consumer
+      - EDC_IAM_STS_OAUTH_CLIENT_SECRET_ALIAS=did:web:[INSERT CONSUMER IP]%3A7083:consumer-sts-client-secret
     ports:
       - "9080:8080" # Web Port
       - "9083:8083" # Control Port
